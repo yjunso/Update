@@ -1,0 +1,44 @@
+Changes made as of 6/1/2016
+
+This updated .zip archive has a few alterations to Jules Thuillier's original VR Tracker code code. These changes worked for me as I
+went through the process of setting up my tracking rig.
+
+The set-up is as follows:
+-3 NodeMCU ESP8266-12E are utilized, 1 for each modified Pixy-cam and 1 acting as a Tag
+	-Each camera's ESP runs vrtracker_websocketV2.ino, and the Tag's ESP runs vrtracker_tagV2.ino
+-The Gateway (a python websocket server) runs on a pc or RPi (though, at the moment the server uses open-cv and this can be slow on RPi)
+	-Run the server with vrtracker.py using Python2
+-SimpleWebsocketClient plugin for Chrome (or similar) connects to server, allowing for calibration of cameras and initiation of tracking
+-Unity app with the VrTracker Unity package imported for WebSocketSharp - using the updated VrTrackerUser.cs
+						(simply has System.IO imported,this may not matter for you but I needed it for android
+							to work)
+
+
+The ESP code and python Gateway have comments for personalizing wifi information. The unity script values must also be changed accordingly.
+
+Calibration Steps:
+-Start server (at the moment, it seems that the ESP's can't reconnect to the server. A fresh start is needed any time an error occurs. This
+	only seems to happen when the cameras are calibrated, and detect IR before Unity app is started/the tag is declared-see below)
+-Turn on all ESP's, make sure cameras can't detect any ambient IR
+-Connect to server with client plugin on chrome
+	-Send "calibration", then "enter"
+-type (don't send) "calib:" followed by coordinates of known, real world points
+	(i.e. "calib:0-0-0" for the origin, in X-Y-Z. Note that the orientation of your known-point coordinate system can
+		change depending on if the cameras are in front of you or off to the side, or otherwise)
+-Be ready to flash the IR at the location of the known point. Send the message from above, then flash the IR. The client should output
+	2D coordinates collected by each camera
+-Repeat this process for each known point (at least 4). Then send "exit" to close the calibration sequence. 3D coordinates of the cameras
+	will be displayed after calculation.
+
+After the cameras are calibrated, connect Unity and send "user-#" from the client, replacing "#" with whatever number the Tag-ESP was
+assigned by the Gateway server (i.e. if you connected the tag first after starting the server, send "user-1"). The system should begin
+tracking.
+
+If an error occurs between calibration and play (maybe due to ambient IR, or exposing IR beacon before tag is identified)
+simply power off/disconnect all parts, and start up again in proper sequence. The camera preferences will load,
+unity will connect (send "user-#" to ID the Tag), then expose the cameras to the IR beacon
+
+
+That should be all, let us know of any questions, comments, or concerns!
+
+-Sawyer Warden
